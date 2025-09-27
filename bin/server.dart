@@ -2,11 +2,12 @@ import 'dart:io';
 
 import 'package:forgottenlandapp_adapters/adapters.dart';
 import 'package:forgottenlandapp_utils/utils.dart';
-import 'package:forgottenlandetl/src/etl.dart';
 import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart';
 import 'package:shelf_cors_headers/shelf_cors_headers.dart';
 import 'package:shelf_router/shelf_router.dart';
+
+import '../lib/src/etl.dart';
 
 final List<String> _requiredVar = <String>['PATH_TIBIA_DATA', 'PATH_TIBIA_DATA_DEV', 'PATH_TIBIA_DATA_SELFHOSTED'];
 final Env _env = Env();
