@@ -1,0 +1,18 @@
+include: package:lints/recommended.yaml
+
+analyzer:
+  language:
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    always_specify_types: true
+    prefer_single_quotes: true
+    sort_constructors_first: true
+    prefer_expression_function_bodies: true
+    prefer_conditional_assignment: true
+    prefer_if_elements_to_conditional_expressions: true
+    avoid_dynamic_calls: false
+    prefer_relative_imports: true
+    avoid_relative_lib_imports: false
