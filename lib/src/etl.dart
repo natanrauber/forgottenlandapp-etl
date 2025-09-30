@@ -29,16 +29,12 @@ class ETL implements IETL {
 
   @override
   Future<Response> expRecord(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
     if (await _exists('exp-record', <String, Object>{'date': DT.tibia.today()})) return ApiResponse.accepted();
     return _getCurrentExp('exp-record', 'insert');
   }
 
   @override
-  Future<Response> currentExp(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-    return _getCurrentExp('current-exp', 'update');
-  }
+  Future<Response> currentExp(Request request) async => _getCurrentExp('current-exp', 'update');
 
   Future<Response> _getCurrentExp(String table, String operation) async {
     try {
@@ -73,7 +69,7 @@ class ETL implements IETL {
 
         aux = null;
         MyHttpResponse response = await httpClient.get(
-          '${env['PATH_TIBIA_DATA_SELFHOSTED']}/highscores/$world/experience/none/$page',
+          '${env[EnvVar.pathTibiaDataApiSelfHosted]}/highscores/$world/experience/none/$page',
         );
 
         if (response.success) {
@@ -94,7 +90,7 @@ class ETL implements IETL {
   }
 
   Future<List<World>> _getWorlds() async {
-    final MyHttpResponse response = await httpClient.get('${env['PATH_TIBIA_DATA']}/worlds');
+    final MyHttpResponse response = await httpClient.get('${env[EnvVar.pathTibiaDataApi]}/worlds');
 
     if (response.dataAsMap['worlds'] is! Map) return <World>[];
     if (response.dataAsMap['worlds']['regular_worlds'] is! List) return <World>[];
@@ -127,8 +123,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> expGainedToday(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     try {
       Record result = await _calcExpGainToday();
       _recordAddMissingRank(result);
@@ -152,8 +146,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> expGainedYesterday(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     if (await _exists('exp-gain-last-day', <String, Object>{'date': DT.tibia.yesterday()})) {
       return ApiResponse.accepted();
     }
@@ -171,8 +163,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> expGainedLast7Days(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     if (await _exists('exp-gain-period', <String, Object>{'period': '7days', 'date': DT.tibia.yesterday()})) {
       return ApiResponse.accepted();
     }
@@ -190,8 +180,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> expGainedLast30Days(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     if (await _exists('exp-gain-period', <String, Object>{'period': '30days', 'date': DT.tibia.yesterday()})) {
       return ApiResponse.accepted();
     }
@@ -209,8 +197,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> expGainedLast365Days(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     if (await _exists('exp-gain-period', <String, Object>{'period': '365days', 'date': DT.tibia.yesterday()})) {
       return ApiResponse.accepted();
     }
@@ -305,8 +291,6 @@ class ETL implements IETL {
   @override
   Future<Response> registerOnlinePlayers(Request request) async {
     try {
-      databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
       Online onlineNow = await _getOnlineNow();
       if (onlineNow.list.isEmpty) return ApiResponse.noContent();
 
@@ -331,7 +315,7 @@ class ETL implements IETL {
       int i = 1;
 
       do {
-        response = await httpClient.get('${env['PATH_TIBIA_DATA']}/world/$world');
+        response = await httpClient.get('${env[EnvVar.pathTibiaDataApi]}/world/$world');
         if (response.success) {
           Online aux = Online.fromJsonTibiaDataAPI(response.dataAsMap);
           aux.list.removeWhere((OnlineEntry e) => e.vocation != 'None' || (e.level ?? 0) < 10);
@@ -441,7 +425,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> rookmaster(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
     if (await _exists('rook-master', <String, Object>{'date': DT.tibia.today()})) return ApiResponse.accepted();
     return _getRookMaster('rook-master', 'insert');
   }
@@ -506,7 +489,7 @@ class ETL implements IETL {
 
       aux = null;
       MyHttpResponse response =
-          await httpClient.get('${env['PATH_TIBIA_DATA_SELFHOSTED']}/highscores/all/experience/none/$page');
+          await httpClient.get('${env[EnvVar.pathTibiaDataApiSelfHosted]}/highscores/all/experience/none/$page');
 
       if (response.success) {
         aux = Record.fromJsonExpanded(response.dataAsMap['highscores'] as Map<String, dynamic>);
@@ -547,8 +530,9 @@ class ETL implements IETL {
       }
 
       aux = null;
-      MyHttpResponse response =
-          await httpClient.get('${env['PATH_TIBIA_DATA_SELFHOSTED']}/highscores/all/$skill/none/$page');
+      MyHttpResponse response = await httpClient.get(
+        '${env[EnvVar.pathTibiaDataApiSelfHosted]}/highscores/all/$skill/none/$page',
+      );
 
       if (response.success) {
         aux = Record.fromJson(response.dataAsMap['highscores'] as Map<String, dynamic>);
@@ -623,8 +607,6 @@ class ETL implements IETL {
 
   @override
   Future<Response> calcSkillPoints(Request request) async {
-    databaseClient.setup(request.headers['supabaseUrl'], request.headers['supabaseKey']);
-
     try {
       String? name = request.params['name'] ?? '';
       int value = int.tryParse(request.params['value'] ?? '') ?? 0;

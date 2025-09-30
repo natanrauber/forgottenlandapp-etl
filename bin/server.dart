@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dotenv/dotenv.dart';
 import 'package:forgottenlandapp_adapters/adapters.dart';
 import 'package:forgottenlandapp_utils/utils.dart';
 import 'package:shelf/shelf.dart';
@@ -9,10 +10,24 @@ import 'package:shelf_router/shelf_router.dart';
 
 import '../lib/src/etl.dart';
 
-final List<String> _requiredVar = <String>['PATH_TIBIA_DATA', 'PATH_TIBIA_DATA_DEV', 'PATH_TIBIA_DATA_SELFHOSTED'];
-final Env _env = Env();
-final IDatabaseClient _databaseClient = MySupabaseClient();
+final List<EnvVar> _required = <EnvVar>[
+  EnvVar.databaseKey,
+  EnvVar.databaseUrl,
+  EnvVar.pathTibiaDataApi,
+  EnvVar.pathTibiaDataApiSelfHosted,
+];
+late final Env _env;
+late final IDatabaseClient _databaseClient;
 final IHttpClient _httpClient = MyDioClient();
+
+Future<void> _loadEnv() async {
+  Map<String, String> localMap = <String, String>{}..addAll(Platform.environment);
+  final DotEnv dotEnv = DotEnv();
+  dotEnv.load();
+  // ignore: invalid_use_of_visible_for_testing_member
+  localMap.addAll(dotEnv.map);
+  _env = Env(env: localMap, required: _required);
+}
 
 // Configure routes.
 final Router _router = Router()
@@ -28,8 +43,11 @@ final Router _router = Router()
   ..get('/skill/<name>/<value>', ETL(_env, _databaseClient, _httpClient).calcSkillPoints);
 
 void main(List<String> args) async {
-  // _env.log();
-  if (_env.isMissingAny(_requiredVar)) return print('Missing required environment variable');
+  await _loadEnv();
+  _databaseClient = MySupabaseClient(
+    databaseUrl: _env[EnvVar.databaseUrl]!,
+    databaseKey: _env[EnvVar.databaseKey]!,
+  );
 
   // Use any available host or container IP (usually `0.0.0.0`).
   final InternetAddress ip = InternetAddress.anyIPv4;
